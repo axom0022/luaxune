@@ -5,4 +5,5 @@ class _Event:
         self._callbacks.append(callback)
         return lambda: self._callbacks.remove(callback)
     def fire(self, *args):
-        for cb in self._callbacks: cb(*args)
+        for cb in self._callbacks:
+            cb(*args)
