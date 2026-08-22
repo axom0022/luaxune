@@ -7,20 +7,21 @@ from .instances import Instance, Folder, Part, Model, Tool, Player
 from .services import *
 from .enums import Enum
 
-def print_(*args, sep=" ", end="\n"):
+def print_(*args, sep=' ', end='\n'):
     _sys.stdout.write(sep.join(str(a) for a in args) + end)
 
 def warn(*args):
-    _sys.stderr.write("Warning: " + " ".join(str(a) for a in args) + "\n")
+    _sys.stderr.write('Warning: ' + ' '.join(str(a) for a in args) + '\n')
 
 def error(msg, level=1):
     raise RuntimeError(str(msg))
 
 def assert_(cond, msg=None):
-    if not cond: error(msg or "assertion failed!")
+    if not cond:
+        error(msg or 'assertion failed!')
     return cond
 
-game = Instance("DataModel")
+game = Instance('DataModel')
 game.ReplicatedStorage = ReplicatedStorage()
 game.ReplicatedStorage.Parent = game
 game.ServerStorage = ServerStorage()
