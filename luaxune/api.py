@@ -4,6 +4,11 @@ from .services import *
 from .events import *
 from .enums import *
 from .standard import standardlibrary
+from .io import _iotable
+from .http import _httptable
+from .debugger import _debuggertable
+from .logger import _loggertable
+from .profile import _profiletable
 
 def createapi():
     api = {
@@ -89,5 +94,11 @@ def createapi():
 
     std = standardlibrary()
     api.update(std.getlibraries())
+
+    api['io'] = _iotable
+    api['http'] = _httptable
+    api['debugger'] = _debuggertable
+    api['logger'] = _loggertable
+    api['profile'] = _profiletable
 
     return type('LuauAPI', (), {'globals': api})()
