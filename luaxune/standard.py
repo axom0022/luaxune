@@ -89,13 +89,38 @@ class standardlibrary:
 
     def coroutinetable(self):
         return _LuauTable({
-            'create': lambda f: f,
-            'resume': lambda co, *args: (True, co(*args) if callable(co) else nil),
-            'yield': lambda *args: (args[0] if len(args)==1 else args),
-            'status': lambda co: 'dead',
-            'wrap': lambda f: lambda *args: f(*args),
-            'running': lambda: (nil, False),
+            'create': self._coroutine_create,
+            'resume': self._coroutine_resume,
+            'yield': self._coroutine_yield,
+            'status': self._coroutine_status,
+            'wrap': self._coroutine_wrap,
+            'running': self._coroutine_running,
         })
+
+    def _coroutine_create(self, func):
+        return {'status': 'suspended', 'func': func}
+
+    def _coroutine_resume(self, coro, *args):
+        return False, 'not implemented'
+
+    def _coroutine_yield(self, *args):
+        return ('yield', args)
+
+    def _coroutine_status(self, coro):
+        return coro.get('status', 'dead')
+
+    def _coroutine_wrap(self, func):
+        def wrapper(*args):
+            coro = self._coroutine_create(func)
+            success, result = self._coroutine_resume(coro, *args)
+            if success:
+                return result
+            else:
+                raise RuntimeError(result)
+        return wrapper
+
+    def _coroutine_running(self):
+        return None
 
     def debugtable(self):
         return _LuauTable({
