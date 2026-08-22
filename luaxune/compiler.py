@@ -1,5 +1,11 @@
+from .typechecker import typechecker
+
 class compiler:
     def compile(self, ast):
+        tc = typechecker()
+        errors = tc.check(ast)
+        if errors:
+            raise RuntimeError('Type errors: ' + '; '.join(errors))
         bytecode = []
         self.compilenode(ast, bytecode)
         return bytecode
