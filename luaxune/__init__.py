@@ -1,4 +1,4 @@
-from .runtime import luau runtime
+from .runtime import luaruntime
 from .api import createapi
 from .types import *
 from .instances import *
