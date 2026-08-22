@@ -1,17 +1,17 @@
-from .runtime import LuauRuntime
-from .api import *
-from .datatypes import *
+from .runtime import luau runtime
+from .api import createapi
+from .types import *
 from .instances import *
 from .services import *
 from .events import *
 from .enums import *
 
 def execute(code, env=None):
-    runtime = LuauRuntime()
-    return runtime.execute(code, env)
+    rt = luaruntime()
+    return rt.execute(code, env)
 
-def execute_file(path, env=None):
-    runtime = LuauRuntime()
-    return runtime.execute_file(path, env)
+def executefile(path, env=None):
+    rt = luaruntime()
+    return rt.executefile(path, env)
 
 __version__ = "1.0.0"
