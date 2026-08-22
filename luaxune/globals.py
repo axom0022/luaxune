@@ -6,6 +6,11 @@ from .types import nil
 from .instances import Instance, Folder, Part, Model, Tool, Player
 from .services import *
 from .enums import Enum
+from .io import _iotable
+from .http import _httptable
+from .debugger import _debuggertable
+from .logger import _loggertable
+from .profile import _profiletable
 
 def print_(*args, sep=' ', end='\n'):
     _sys.stdout.write(sep.join(str(a) for a in args) + end)
