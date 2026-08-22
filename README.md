@@ -1,164 +1,71 @@
+# Luaxune Documentation
 
-# Luaxune – Full Roblox Luau for Python
-
-**Luaxune** is a pure-Python library that replicates the entire Roblox Luau API, including all standard libraries (`math`, `string`, `table`, …), data types (`Vector3`, `CFrame`, `Color3`, …), the complete `Instance` hierarchy (`Part`, `Model`, `Tool`, `Player`, …), all Roblox services (`DataStoreService`, `Players`, `RunService`, …), and an event system.  
-It is designed to run on **any Python 3.7+ environment**, including **mobile** (Termux, PyDroid, etc.). and desktop/pc
-
-The library is a **full mock** – no external dependencies, everything is implemented in Python. It uses **snake_case** for all internal identifiers (variables, helper functions, private attributes) but the **public API** follows Roblox conventions (PascalCase for classes, camelCase for properties and methods).
+Luaxune is a Python-based Luau runtime that executes Luau scripts on mobile devices, desktops, or anywhere Python runs. It includes a full parser, bytecode compiler, virtual machine, and the complete Roblox API mock with all services, instances, data types, and global functions.
 
 ---
 
-## Installation
+Installation
 
-### As a folder
-Copy the `luaxune/` directory into your project and import it:
+Luaxune can be used in several ways:
 
-```
-import luaxune
-```
+Copy the luaxune folder into your project and import it directly
+Install with pip by running pip install . in the directory containing setup.py
+Bundle as a zip file for distribution
+Package as an exe using PyInstaller after installation
 
-As a pip package
-
-Run in the directory containing setup.py:
-
-```
-pip install .
-```
-
-Then you can import luaxune from anywhere.
-
-As a .zip
-
-Compress the entire project folder (including luaxune/ and setup.py). Extract and use as above.
-
-As a standalone .exe
-
-Use PyInstaller to bundle your Python script with the library:
-
-```
-pip install pyinstaller
-pyinstaller --onefile thescript.py
-```
-
-The library will be included automatically.
+The library has no external dependencies and works on Python 3.7 and above.
 
 ---
 
-Getting Started
+Quick Start
 
-```
+```python
 import luaxune
 
-# Create a Part
+result = luaxune.execute("""
+    local x = 10
+    local y = 20
+    return x + y
+""")
+print(result)
+```
+
+```python
+import luaxune
+
 part = luaxune.Part()
-part.Name = "MyPart"
 part.Position = luaxune.Vector3(10, 5, 0)
 part.Color = luaxune.Color3.from_rgb(255, 0, 0)
+print(part.Name, part.Position, part.Color)
 
-print(part.Name)                 # "MyPart"
-print(part.Position)             # Vector3(10.0, 5.0, 0.0)
-print(part.Color)                # Color3(1.0, 0.0, 0.0)
-
-# Model with children
 model = luaxune.Model()
 model.Name = "MyModel"
 part.Parent = model
-print(model.GetChildren())       # [Part('MyPart')]
+print(model.GetChildren())
 
-# Access the global game object
 game = luaxune.game
 player = game.Players.CreatePlayer(12345, "JohnDoe")
-print(player.DisplayName)        # "JohnDoe"
+print(player.DisplayName)
 ```
 
 ---
 
-Lua Standard Library
+Core Functions
 
-Luaxune provides the complete set of Lua standard libraries as Python objects.
+execute(code, env=None)
 
-math table
+Executes a Luau code string and returns the result.
 
-All functions from Lua's math library:
-
-```
-luaxune.math.pi                # 3.141592653589793
-luaxune.math.abs(-5)           # 5.0
-luaxune.math.random()          # random float [0,1)
-luaxune.math.randomseed(42)    # seed
+```python
+result = luaxune.execute("return 2 + 2")
 ```
 
-string table
+executefile(path, env=None)
 
-String manipulation functions:
+Reads and executes a Luau script file.
 
-```
-s = "Hello, World!"
-luaxune.string.len(s)          # 13
-luaxune.string.sub(s, 1, 5)    # "Hello"
-luaxune.string.upper(s)        # "HELLO, WORLD!"
-luaxune.string.gsub(s, "o", "0")  # ("Hell0, W0rld!", 2)
-luaxune.string.find(s, "Wor")  # (8, 10)
-```
-
-table table
-
-Table utilities:
-
-```
-t = luaxune.table.pack(1, 2, 3)  # returns LuauTable
-luaxune.table.concat(t, ", ")    # "1, 2, 3"
-luaxune.table.insert(t, 2, 99)   # t becomes {1, 99, 2, 3}
-luaxune.table.remove(t, 2)       # removes 99
-```
-
-os table
-
-Basic OS functions (mocked where needed):
-
-```
-luaxune.os.time()              # current timestamp
-luaxune.os.date("%Y-%m-%d")    # "2026-08-22"
-luaxune.os.clock()             # CPU time
-```
-
-coroutine table
-
-Coroutine functions (simplified):
-
-```
-co = luaxune.coroutine.create(lambda x: x*2)
-success, res = luaxune.coroutine.resume(co, 5)
-print(res)  # 10
-```
-
-debug table
-
-Debugging helpers:
-
-```
-luaxune.debug.traceback()      # current traceback
-luaxune.debug.getinfo(1)       # info table
-```
-
-Global functions
-
-```
-luaxune.print("Hello")          # print to stdout
-luaxune.type(123)               # "number"
-luaxune.tonumber("3.14")        # 3.14
-luaxune.tostring(nil)           # "nil"
-luaxune.error("Something went wrong")
-luaxune.assert(1 == 1, "fail")
-luaxune.pcall(safe_func, arg)   # (True, result) or (False, error_msg)
-luaxune.xpcall(func, err_handler, arg)
-luaxune.setmetatable(t, mt)     # set metatable
-luaxune.getmetatable(t)         # get metatable
-luaxune.rawget(t, key)          # bypass metatable
-luaxune.rawset(t, key, val)
-luaxune.rawlen(t)               # length ignoring metamethods
-luaxune.select("#", 1,2,3)      # returns 3
-luaxune.next(t, nil)            # returns first key,value
+```python
+result = luaxune.executefile("script.luau")
 ```
 
 ---
@@ -167,298 +74,746 @@ Data Types
 
 Vector3
 
-Represents 3D vectors.
+Represents 3D coordinates with x, y, z components.
 
-```
+```python
 v1 = luaxune.Vector3(1, 2, 3)
 v2 = luaxune.Vector3(4, 5, 6)
-print(v1 + v2)          # Vector3(5.0, 7.0, 9.0)
-print(v1 * 2)           # Vector3(2.0, 4.0, 6.0)
-print(v1.magnitude())   # 3.7416573867739413
-print(v1.unit())        # normalized vector
-print(v1.dot(v2))       # 32
-print(v1.cross(v2))     # Vector3(-3.0, 6.0, -3.0)
-print(v1.lerp(v2, 0.5)) # Vector3(2.5, 3.5, 4.5)
+
+print(v1 + v2)
+print(v1 * 2)
+print(v1.magnitude())
+print(v1.unit())
+print(v1.dot(v2))
+print(v1.cross(v2))
+print(v1.lerp(v2, 0.5))
 ```
+
+Properties and methods:
+
+x, y, z - float components
+magnitude() - returns length of vector
+unit() - returns normalized vector
+dot(other) - dot product
+cross(other) - cross product
+lerp(other, t) - linear interpolation
 
 CFrame
 
-Represents position and rotation (simplified).
+Represents position and orientation (simplified implementation).
 
-```
+```python
 cf = luaxune.CFrame.new(0, 10, 0)
-print(cf.position)      # Vector3(0.0, 10.0, 0.0)
-# Multiplication with Vector3 applies transformation (simplified)
-point = cf * luaxune.Vector3(1,0,0)
+print(cf.position)
+point = cf * luaxune.Vector3(1, 0, 0)
 ```
+
+Static methods:
+
+new(x, y, z) - creates CFrame at position
+look_at(pos, target, up) - creates CFrame looking at target
 
 Color3
 
-RGB color.
+RGB color with components from 0 to 1.
 
-```
+```python
 c = luaxune.Color3(0.5, 0.2, 0.8)
-c2 = luaxune.Color3.from_rgb(255, 0, 0)   # red
-c3 = luaxune.Color3.from_hsv(0.5, 1, 1)   # HSV conversion (approximate)
-print(c.to_hex())       # "#8033cc"
+c2 = luaxune.Color3.from_rgb(255, 0, 0)
+c3 = luaxune.Color3.from_hsv(0.5, 1, 1)
 ```
 
-Rect, UDim, UDim2
+Methods:
 
-GUI layout helpers.
+from_rgb(r, g, b) - creates Color3 from 0-255 values
+from_hsv(h, s, v) - creates Color3 from HSV (simplified)
 
-```
+Rect
+
+Rectangle with x0, y0, x1, y1 coordinates.
+
+```python
 rect = luaxune.Rect(0, 0, 100, 200)
-udim = luaxune.UDim(0.5, 10)          # scale + offset
+```
+
+UDim
+
+Scale and offset for UI positioning.
+
+```python
+udim = luaxune.UDim(0.5, 10)
+```
+
+UDim2
+
+Combination of two UDim for x and y dimensions.
+
+```python
 udim2 = luaxune.UDim2(0.5, 10, 0.2, 5)
+```
+
+nil
+
+The nil value represents nothing or no value.
+
+```python
+if result is luaxune.nil:
+    print("Value is nil")
 ```
 
 ---
 
-Instances and the Data Model
+Standard Libraries
 
-Luaxune implements the complete Roblox Instance hierarchy.
+math
 
-Instance – base class
+All standard math functions and constants.
 
-All properties and methods that every instance has:
+```python
+luaxune.math.pi
+luaxune.math.abs(-5)
+luaxune.math.random()
+luaxune.math.randomseed(42)
+luaxune.math.sin(1.0)
+luaxune.math.cos(1.0)
+luaxune.math.tan(1.0)
+luaxune.math.sqrt(16)
+luaxune.math.pow(2, 3)
+luaxune.math.log(10)
+luaxune.math.ceil(3.14)
+luaxune.math.floor(3.14)
+luaxune.math.max(1, 2, 3)
+luaxune.math.min(1, 2, 3)
+```
 
-- Name – string, get/set
-- ClassName – read‑only
-- Parent – get/set
-- GetFullName() – returns path like "Workspace.Part"
-- FindFirstChild(name, recursive=False) – returns child or nil
-- WaitForChild(name, timeout=None) – blocks until child exists
-- GetChildren() – list of immediate children
-- GetDescendants() – list of all descendants
-- IsA(class_name) – boolean
-- Clone(parent=None) – deep copy
-- Destroy() – removes from parent
-- AddTag(tag), HasTag(tag), RemoveTag(tag), GetTags() – tagging system
-- GetAttribute(attr), SetAttribute(attr, value), GetAttributes(), ClearAttributes() – custom attributes
-- Changed – _Event fired when Name changes
-- AncestryChanged – _Event fired when Parent changes
+string
 
-Part – 3D object
+String manipulation functions.
 
-Extends Instance with:
+```python
+s = "Hello, World!"
+luaxune.string.len(s)
+luaxune.string.sub(s, 1, 5)
+luaxune.string.upper(s)
+luaxune.string.lower(s)
+luaxune.string.reverse(s)
+luaxune.string.rep(s, 3)
+luaxune.string.find(s, "Wor")
+luaxune.string.gsub(s, "o", "0")
+luaxune.string.gmatch(s, "%a+")
+luaxune.string.match(s, "Hello")
+luaxune.string.format("%s %d", "Value", 42)
+luaxune.string.byte(s, 1)
+luaxune.string.char(72, 101, 108, 108, 111)
+```
 
-- Size – Vector3
-- Position – Vector3
-- Orientation – Vector3
-- Color – Color3
-- Material – string (e.g., "Plastic", "Metal")
-- Transparency – float 0..1
-- Reflectance – float 0..1
-- Anchored – bool
-- CanCollide – bool
-- Velocity – Vector3
-- RotVelocity – Vector3
+table
+
+Table manipulation functions.
+
+```python
+t = luaxune.table.pack(1, 2, 3)
+luaxune.table.concat(t, ", ")
+luaxune.table.insert(t, 2, 99)
+luaxune.table.remove(t, 2)
+luaxune.table.sort(t)
+luaxune.table.unpack(t)
+```
+
+os
+
+Operating system functions (mocked).
+
+```python
+luaxune.os.time()
+luaxune.os.date("%Y-%m-%d")
+luaxune.os.clock()
+luaxune.os.difftime(t1, t2)
+```
+
+coroutine
+
+Coroutine functions (simplified).
+
+```python
+co = luaxune.coroutine.create(lambda x: x * 2)
+success, result = luaxune.coroutine.resume(co, 5)
+luaxune.coroutine.yield(42)
+luaxune.coroutine.status(co)
+luaxune.coroutine.wrap(lambda x: x * 2)
+luaxune.coroutine.running()
+```
+
+debug
+
+Debugging functions.
+
+```python
+luaxune.debug.traceback()
+luaxune.debug.getinfo(1)
+```
+
+---
+
+Global Functions
+
+print(*args, sep=' ', end='\n')
+
+Prints to stdout.
+
+warn(*args)
+
+Prints to stderr with "Warning:" prefix.
+
+error(msg, level=1)
+
+Raises a RuntimeError.
+
+assert(cond, msg=None)
+
+Raises error if condition is false.
+
+type(obj)
+
+Returns type name as string: "nil", "boolean", "number", "string", "function", "table", "userdata".
+
+tonumber(s, base=10)
+
+Converts string to number, returns nil on failure.
+
+tostring(v)
+
+Converts value to string.
+
+rawget(table, key)
+
+Gets value from table without metatable.
+
+rawset(table, key, value)
+
+Sets value in table without metatable.
+
+rawlen(table)
+
+Gets length of table without metatable.
+
+select(index, *args)
+
+Returns arguments from index or count if index is "#".
+
+next(table, index=None)
+
+Returns next key-value pair for iteration.
+
+pairs(table)
+
+Returns iterator for table key-value pairs.
+
+ipairs(table)
+
+Returns iterator for table array part.
+
+pcall(func, *args)
+
+Calls function with error handling, returns success and result.
+
+xpcall(func, errhandler, *args)
+
+Calls function with custom error handler.
+
+setmetatable(table, metatable)
+
+Sets metatable for table.
+
+getmetatable(table)
+
+Gets metatable of table.
+
+---
+
+Instance System
+
+Instance
+
+Base class for all Roblox objects.
+
+Properties:
+
+Name - string, read/write
+ClassName - string, read-only
+Parent - Instance or nil, read/write
+
+Methods:
+
+GetFullName() - returns full path name
+FindFirstChild(name, recursive=False) - returns child or nil
+WaitForChild(name, timeout=None) - waits for child to appear
+GetChildren() - returns list of immediate children
+GetDescendants() - returns list of all descendants
+IsA(class_name) - checks if instance is of given class
+Clone(parent=None) - creates a deep copy
+Destroy() - removes from parent and clears children
+AddTag(tag) - adds a tag
+HasTag(tag) - checks if tag exists
+RemoveTag(tag) - removes a tag
+GetTags() - returns list of tags
+GetAttribute(attr) - gets custom attribute
+SetAttribute(attr, value) - sets custom attribute
+GetAttributes() - returns all attributes
+ClearAttributes() - removes all attributes
+GetDebugId() - returns hex id
+GetDebugChildren() - returns debug children
+GetDebugString() - returns debug string
+
+Events:
+
+Changed - fires when Name changes
+AncestryChanged - fires when Parent changes
+ChildAdded - fires when child is added
+ChildRemoved - fires when child is removed
+DescendantAdded - fires when descendant is added
+DescendantRemoved - fires when descendant is removed
+PropertyChanged - fires when attribute changes
+
+Part
+
+3D physical object extending Instance.
+
+Properties:
+
+Size - Vector3
+Position - Vector3
+Orientation - Vector3
+Color - Color3
+Material - string ("Plastic", "Metal", etc.)
+Transparency - float 0-1
+Reflectance - float 0-1
+Anchored - boolean
+CanCollide - boolean
+Velocity - Vector3
+RotVelocity - Vector3
 
 Model
 
-Extends Instance with:
+Container for parts extending Instance.
 
-- GetPrimaryPart() – returns the primary Part
-- SetPrimaryPart(part) – sets the primary part
+Methods:
+
+GetPrimaryPart() - returns primary Part or nil
+SetPrimaryPart(part) - sets the primary part
 
 Tool
 
-Extends Model with:
+Tool object extending Instance.
 
-- CanEquip – bool
-- RequiresHandle – bool
-- Grip – CFrame
-- Equip(player), Unequip(), Activate() – methods
+Properties:
+
+CanEquip - boolean
+RequiresHandle - boolean
+Grip - CFrame
+
+Methods:
+
+Equip(player) - equips tool
+Unequip() - unequips tool
+Activate() - activates tool
 
 Player
 
-Represents a player:
+Player object extending Instance.
 
-- UserId – int
-- DisplayName – string
-- AccountAge – int
-- Character – Model or nil
-- LoadCharacter() – mock
+Properties:
 
-Other instances
+UserId - int
+DisplayName - string
+AccountAge - int
+Character - Model or nil
 
-- Folder
-- Script, ModuleScript, LocalScript (with Source property)
-- ValueBase subclasses: BoolValue, NumberValue, StringValue, ObjectValue, Color3Value, Vector3Value, CFrameValue, BrickColorValue, IntValue, DoubleValue
+Methods:
+
+LoadCharacter() - loads character
+
+Folder
+
+Simple container extending Instance.
 
 ---
 
 Services
 
-All Roblox services are available as children of the global game object.
+All services are available as children of the global game object.
 
 Players
 
-- GetPlayers() – list of all Player objects
-- GetPlayerByUserId(id) – returns player or nil
-- GetPlayerByName(name) – returns player or nil
-- CreatePlayer(user_id, name) – creates a new player (mock)
+Player management service.
+
+Methods:
+
+GetPlayers() - returns list of all players
+GetPlayerByUserId(id) - returns player or nil
+GetPlayerByName(name) - returns player or nil
+CreatePlayer(user_id, name) - creates and adds a player
 
 DataStoreService
 
-- GetDataStore(name, scope=None) – returns a mock data store (a LuauTable)
+Data storage service.
+
+Methods:
+
+GetDataStore(name, scope=None) - returns a data store table
 
 HttpService
 
-- HttpEnabled – bool (mock)
-- GetAsync(url, headers=None) – returns "{}"
-- PostAsync(url, data, content_type="application/json") – returns "{}"
-- RequestAsync(options) – returns mock response dict
-- JSONDecode(data) – uses Python json.loads
-- JSONEncode(data) – uses Python json.dumps
+HTTP request service.
 
-RunService
+Properties:
 
-- Heartbeat
--  _Event that fires every frame (mock)
-- Stepped – event
-- RenderStepped – event
-- IsServer() – always True (mocks server)
-- IsClient() – always False
-- IsStudio() – always False
+HttpEnabled - boolean
+
+Methods:
+
+GetAsync(url, headers=None) - returns mock JSON string
+PostAsync(url, data, content_type) - returns mock JSON string
+RequestAsync(options) - returns mock response
+JSONDecode(data) - decodes JSON using Python json
+JSONEncode(data) - encodes JSON using Python json
 
 TweenService
 
-- Create(instance, tween_info, properties) – returns a mock tween with play(), cancel(), etc.
-- GetTweenInfo(duration, easing_style, easing_direction, repeat_count=0, reverses=False, delay_time=0) – returns info table
+Animation service.
+
+Methods:
+
+Create(instance, tween_info, properties) - returns mock tween object
+GetTweenInfo(duration, easing_style, easing_direction, repeat_count=0, reverses=False, delay_time=0) - returns tween info table
+
+RunService
+
+Game loop service.
+
+Properties:
+
+Heartbeat - Event
+Stepped - Event
+RenderStepped - Event
+
+Methods:
+
+IsServer() - returns True
+IsClient() - returns False
+IsStudio() - returns False
 
 Lighting
 
-- Brightness – float
-- ClockTime – float (hour 0-24)
-- Ambient – Color3
+Environment lighting service.
+
+Properties:
+
+Brightness - float
+ClockTime - float (0-24 hours)
+Ambient - Color3
 
 SoundService
 
-- Volume – float
-- DistanceFactor – float
+Audio service.
+
+Properties:
+
+Volume - float
+DistanceFactor - float
 
 UserInputService
 
-- MouseEnabled – bool
-- MouseBehaviour – string
+Input handling service.
+
+Properties:
+
+MouseEnabled - boolean
+MouseBehaviour - string
 
 ContextActionService
 
-- BindAction(action_name, callback, create_button=True, touch_screen_controls=None) – dummy
-- UnbindAction(action_name) – dummy
+Action binding service.
+
+Methods:
+
+BindAction(action_name, callback, create_button=True, touch_screen_controls=None)
+UnbindAction(action_name)
 
 MarketplaceService
 
-- CanPurchase(player, product_id) – returns True
-- PurchaseProduct(player, product_id) – returns True
+Purchase service.
+
+Methods:
+
+CanPurchase(player, product_id) - returns True
+PurchaseProduct(player, product_id) - returns True
 
 TeleportService
 
-- Teleport(place_id, players, options=None) – dummy
+Teleport service.
+
+Methods:
+
+Teleport(place_id, players, options=None)
 
 GuiService
 
-- GetGuiInset() – returns Rect(0,0,0,0)
+GUI service.
+
+Methods:
+
+GetGuiInset() - returns Rect
 
 TextService
 
-- FilterAsync(text, from_user_id, context) – returns text (no filtering)
+Text filtering service.
+
+Methods:
+
+FilterAsync(text, from_user_id, context) - returns same text
 
 PathfindingService
 
-- CreatePath(options=None) – returns table with ComputeAsync, GetWaypoints, IsBlocked (all mock)
+Pathfinding service.
+
+Methods:
+
+CreatePath(options=None) - returns mock path object with ComputeAsync, GetWaypoints, IsBlocked
 
 CollectionService
 
-- AddTag(instance, tag), RemoveTag(instance, tag), HasTag(instance, tag), GetTagged(tag), GetTags(instance), IsInstanceInTag(instance, tag) – tag management
+Tag management service.
 
-Other services: ReplicatedStorage, ServerStorage, ServerScriptService, StarterGui, StarterPack, StarterPlayer.
+Methods:
+
+AddTag(instance, tag)
+RemoveTag(instance, tag)
+HasTag(instance, tag) - returns boolean
+GetTagged(tag) - returns list of instances
+GetTags(instance) - returns list of tags
+IsInstanceInTag(instance, tag) - returns boolean
+
+ReplicatedStorage
+
+Storage for replicated objects extending Instance.
+
+ServerStorage
+
+Storage for server-only objects extending Instance.
+
+ServerScriptService
+
+Container for server scripts extending Instance.
+
+StarterGui
+
+Container for GUI objects extending Instance.
+
+StarterPack
+
+Container for starter tools extending Instance.
+
+StarterPlayer
+
+Starter player settings extending Instance.
 
 ---
 
 Events
 
-The library provides a simple event system:
+Events are used for callbacks and signals.
 
-```
-event = luaxune._Event()  # internal, but also exposed via Instance properties
+Event
+
+Methods:
+
+connect(callback) - registers a callback, returns disconnect function
+fire(*args) - calls all connected callbacks
+
+```python
+event = luaxune._Event()
 event.connect(lambda x: print("Got", x))
-event.fire(42)            # prints "Got 42"
+event.fire(42)
 connection = event.connect(func)
-connection()              # disconnects
+connection()
 ```
-
-Most instance properties like Changed, AncestryChanged, and service events (e.g., RunService.Heartbeat) are _Event objects.
 
 ---
 
 Enums
 
-luaxune.Enum is a container for enumeration items.
+Enum
 
-```
+Enumeration container.
+
+```python
 enum = luaxune.Enum("MyEnum", {"One": 1, "Two": 2})
-print(enum.One)           # EnumItem("One", 1)
-print(enum["Two"])        # EnumItem("Two", 2)
+print(enum.One)
+print(enum["Two"])
 for item in enum:
     print(item.name, item.value)
 ```
 
-A predefined Normal item is available.
+EnumItem
+
+Individual enumeration item.
+
+Properties:
+
+name - string
+value - int
 
 ---
 
-Usage
+The Game Object
 
-Metatables on LuauTables
+The global game object is a pre-configured Instance containing all services as children.
 
-Luaxune implements _LuauTable which supports metatables for custom behavior:
-
+```python
+game = luaxune.game
+print(game.Players)
+print(game.Lighting)
+print(game.ReplicatedStorage)
+print(game.ServerStorage)
+print(game.RunService)
+print(game.DataStoreService)
 ```
+
+---
+
+Metatables
+
+Luau tables support metatables for custom behavior.
+
+```python
 t = luaxune._LuauTable()
 mt = luaxune._LuauTable()
 mt["__index"] = lambda self, key: "default"
 luaxune.setmetatable(t, mt)
-print(t["foo"])          # "default"
+print(t["foo"])
 ```
 
-### Raw operations
+Supported metamethods:
 
-Use rawget, rawset, rawlen to bypass metatables.
+__index - table lookup fallback
+__newindex - table assignment fallback
+__call - function call on table
+__add, __sub, __mul, __div, __mod, __pow - arithmetic operators
+__unm - unary minus
+__eq, __lt, __le - comparison operators
+__len - length operator
+__tostring - string conversion
 
+---
 
-## Example Script :
-```
+Example Scripts
+
+Basic arithmetic
+
+```python
 import luaxune
-import time
-
-game = luaxune.game
-player = game.Players.CreatePlayer(1, "Hero")
-
-# Create a part and move it
-part = luaxune.Part()
-part.Name = "MovingPart"
-part.Size = luaxune.Vector3(2, 2, 2)
-part.Color = luaxune.Color3.from_rgb(0, 255, 0)
-part.Parent = game.Workspace
-
-# Animate via RunService (simulated)
-def on_heartbeat(dt):
-    part.Position += luaxune.Vector3(1, 0, 0) * dt
-    print(f"Part at {part.Position}")
-
-connection = game.RunService.Heartbeat.connect(on_heartbeat)
-
-# Simulate 5 seconds of loop
-start = time.time()
-while time.time() - start < 5:
-    game.RunService.Heartbeat.fire(0.016)   # mock 60 fps
-    time.sleep(0.016)
-
-connection()  # disconnect
-part.Destroy()
+result = luaxune.execute("""
+    local x = 10
+    local y = 20
+    return x + y
+""")
+print(result)
 ```
 
-Enjoy using Luaxune!
+Using tables and functions
+
+```python
+import luaxune
+result = luaxune.execute("""
+    local t = {1, 2, 3}
+    local function sum(t)
+        local s = 0
+        for i, v in ipairs(t) do
+            s = s + v
+        end
+        return s
+    end
+    return sum(t)
+""")
+print(result)
+```
+
+Creating parts and models
+
+```python
+import luaxune
+
+code = """
+    local part = Instance.new("Part")
+    part.Name = "MyPart"
+    part.Position = Vector3.new(10, 5, 0)
+    part.Color = Color3.from_rgb(255, 0, 0)
+    
+    local model = Instance.new("Model")
+    model.Name = "MyModel"
+    part.Parent = model
+    
+    return model:GetChildren()
+"""
+result = luaxune.execute(code)
+print(result)
+```
+
+Using services
+
+```python
+import luaxune
+
+code = """
+    local game = game
+    local players = game:FindFirstChild("Players")
+    local player = players:CreatePlayer(12345, "JohnDoe")
+    return player.DisplayName
+"""
+result = luaxune.execute(code)
+print(result)
+```
+
+Event handling
+
+```python
+import luaxune
+
+code = """
+    local part = Instance.new("Part")
+    local count = 0
+    part.Changed:connect(function(prop, old, new)
+        count = count + 1
+    end)
+    part.Name = "NewName"
+    part.Name = "AnotherName"
+    return count
+"""
+result = luaxune.execute(code)
+print(result)
+```
+
+---
+
+Mobile Support
+
+Luaxune is pure Python with no binary dependencies and runs on:
+
+Android via Termux (install Python then pip install .)
+iOS via Pythonista or a-Shell
+Any Python 3.7+ interpreter
+
+All features work identically on mobile devices.
+
+---
+
+Limitations
+
+unfinished networking - HTTP requests return dummy data cuz it's not finished
+Simplified CFrame - only position and basic multiplication (it'll get improved dw) 
+TweenService returns mock objects only (also unfinished) 
+DataStoreService stores data in memory, not persistent 
+All services are synchronous with no async/aawai (cuz this is still v1 yk) 
+
+Version : V1
