@@ -53,10 +53,19 @@ class parser:
     def parselocal(self, tokens, i, ast):
         i += 1
         names = []
+        types = []
         while i < len(tokens) and tokens[i][0] in ('IDENTIFIER', ','):
             if tokens[i][0] == 'IDENTIFIER':
-                names.append(tokens[i][1])
-            i += 1
+                name = tokens[i][1]
+                i += 1
+                typ = None
+                if i < len(tokens) and tokens[i][0] == 'OPERATOR' and tokens[i][1] == ':':
+                    i += 1
+                    typ, i = self._parse_type(tokens, i)
+                names.append(name)
+                types.append(typ)
+            else:
+                i += 1
         exprs = []
         if i < len(tokens) and tokens[i][0] == 'OPERATOR' and tokens[i][1] == '=':
             i += 1
@@ -67,7 +76,7 @@ class parser:
                     i += 1
         if not exprs:
             exprs = [None] * len(names)
-        ast['body'].append({'type': 'local', 'names': names, 'values': exprs})
+        ast['body'].append({'type': 'local', 'names': names, 'types': types, 'values': exprs})
         return i
 
     def parsefuncdef(self, tokens, i, ast):
@@ -78,16 +87,27 @@ class parser:
         if i < len(tokens) and tokens[i][0] == 'OPERATOR' and tokens[i][1] == '(':
             i += 1
             params = []
+            paramtypes = []
             while i < len(tokens) and not (tokens[i][0] == 'OPERATOR' and tokens[i][1] == ')'):
                 if tokens[i][0] == 'IDENTIFIER':
-                    params.append(tokens[i][1])
+                    pname = tokens[i][1]
                     i += 1
+                    ptype = None
+                    if i < len(tokens) and tokens[i][0] == 'OPERATOR' and tokens[i][1] == ':':
+                        i += 1
+                        ptype, i = self._parse_type(tokens, i)
+                    params.append(pname)
+                    paramtypes.append(ptype)
                     if i < len(tokens) and tokens[i][0] == 'OPERATOR' and tokens[i][1] == ',':
                         i += 1
                 else:
                     i += 1
             if i < len(tokens) and tokens[i][1] == ')':
                 i += 1
+        rettype = None
+        if i < len(tokens) and tokens[i][0] == 'OPERATOR' and tokens[i][1] == ':':
+            i += 1
+            rettype, i = self._parse_type(tokens, i)
         body = []
         while i < len(tokens) and not (tokens[i][0] == 'KEYWORD' and tokens[i][1] == 'end'):
             if tokens[i][0] == 'KEYWORD' and tokens[i][1] == 'return':
@@ -98,8 +118,15 @@ class parser:
                 body.append(stmt)
         if i < len(tokens) and tokens[i][1] == 'end':
             i += 1
-        ast['body'].append({'type': 'function', 'name': name, 'params': params, 'body': body})
+        ast['body'].append({'type': 'function', 'name': name, 'params': params, 'paramtypes': paramtypes, 'rettype': rettype, 'body': body})
         return i
+
+    def _parse_type(self, tokens, i):
+        if i < len(tokens) and tokens[i][0] == 'IDENTIFIER':
+            typ = tokens[i][1]
+            i += 1
+            return typ, i
+        return None, i
 
     def parseif(self, tokens, i, ast):
         i += 1
