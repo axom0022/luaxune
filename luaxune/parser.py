@@ -235,8 +235,53 @@ class parser:
         return i
 
     def parseexpr(self, tokens, i):
-        if i >= len(tokens):
+        return self._parse_expr_prec(tokens, i, 0)
+
+    def _parse_expr_prec(self, tokens, i, min_prec):
+        lhs, i = self._parse_primary(tokens, i)
+        if lhs is None:
             return {'type': 'nil', 'value': None}, i
+        while True:
+            if i >= len(tokens):
+                break
+            tok = tokens[i]
+            if tok[0] != 'OPERATOR':
+                break
+            op = tok[1]
+            prec = self._op_precedence(op)
+            if prec < min_prec:
+                break
+            if op == '=':
+                break
+            i += 1
+            rhs, i = self._parse_expr_prec(tokens, i, prec + 1)
+            if rhs is None:
+                break
+            lhs = {'type': 'binop', 'op': op, 'left': lhs, 'right': rhs}
+        return lhs, i
+
+    def _op_precedence(self, op):
+        if op in ('or',):
+            return 1
+        if op in ('and',):
+            return 2
+        if op in ('<', '>', '<=', '>=', '==', '~='):
+            return 3
+        if op in ('..',):
+            return 4
+        if op in ('+', '-'):
+            return 5
+        if op in ('*', '/', '%'):
+            return 6
+        if op in ('^',):
+            return 7
+        if op in ('.', ':', '['):
+            return 8  
+        return 0
+
+    def _parse_primary(self, tokens, i):
+        if i >= len(tokens):
+            return None, i
         tok = tokens[i]
         if tok[0] == 'NUMBER':
             return {'type': 'number', 'value': float(tok[1])}, i+1
@@ -252,26 +297,14 @@ class parser:
             return {'type': 'identifier', 'value': tok[1]}, i+1
         elif tok[0] == 'OPERATOR':
             if tok[1] == '(':
-                expr, i = self.parseexpr(tokens, i+1)
+                expr, i = self._parse_expr_prec(tokens, i+1, 0)
                 if i < len(tokens) and tokens[i][1] == ')':
                     i += 1
                 return {'type': 'grouped', 'value': expr}, i
             elif tok[1] == '.':
-                obj, i = self.parseexpr(tokens, i+1)
-                if i < len(tokens) and tokens[i][0] == 'IDENTIFIER':
-                    prop = tokens[i][1]
-                    i += 1
-                    return {'type': 'property', 'object': obj, 'property': prop}, i
+                return None, i
             elif tok[1] == '[':
-                obj, i = self.parseexpr(tokens, i+1)
-                if i < len(tokens) and tokens[i][1] == ']':
-                    i += 1
-                    return {'type': 'index', 'object': obj, 'index': {'type': 'nil', 'value': None}}, i
+                return None, i
             else:
-                left, i = self.parseexpr(tokens, i)
-                if i < len(tokens) and tokens[i][0] == 'OPERATOR':
-                    op = tokens[i][1]
-                    i += 1
-                    right, i = self.parseexpr(tokens, i)
-                    return {'type': 'binop', 'op': op, 'left': left, 'right': right}, i
-        return {'type': 'nil', 'value': None}, i+1
+                return None, i
+        return None, i
