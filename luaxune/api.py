@@ -9,6 +9,8 @@ from .http import _httptable
 from .debugger import _debuggertable
 from .logger import _loggertable
 from .profile import _profiletable
+from .core import type_, tonumber, tostring, rawget, rawset, rawlen, select, next, pairs, ipairs, pcall, xpcall, setmetatable, getmetatable
+from .globals import print_, warn, error
 
 def createapi():
     api = {
@@ -27,7 +29,7 @@ def createapi():
         'Folder': Folder,
         'Enum': Enum,
         'nil': None,
-        'print': print,
+        'print': print_,
         'warn': warn,
         'error': error,
         'type': type_,
