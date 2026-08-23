@@ -83,7 +83,7 @@ class standardlibrary:
             'clock': _time.process_time,
             'date': lambda fmt=None, time=None: _datetime.datetime.fromtimestamp(time or _time.time()).strftime(fmt or '%c'),
             'time': _time.time,
-            'difftime': _time.time.__sub__,
+            'difftime': lambda t1, t2: t2 - t1,
             'execute': lambda cmd: 0,
         })
 
