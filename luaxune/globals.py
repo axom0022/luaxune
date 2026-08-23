@@ -72,4 +72,3 @@ game.CollectionService.Parent = game
 
 print = print_
 type = type_
-assert = assert_
